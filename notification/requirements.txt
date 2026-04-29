@@ -1,6 +1,3 @@
-fastapi>=0.110.0
-uvicorn[standard]
 redis-om>=0.2.1
 python-dotenv
 pydantic-settings
-httpx

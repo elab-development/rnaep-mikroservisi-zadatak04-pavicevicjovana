@@ -1,0 +1,64 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  inventory:
+    build: ./inventory
+    ports:
+      - "8000:8000"
+    env_file: ./inventory/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: on-failure
+
+  inventory-consumer:
+    build: ./inventory
+    env_file: ./inventory/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: python consumer.py
+    restart: on-failure
+
+  payment:
+    build: ./payment
+    ports:
+      - "8001:8001"
+    env_file: ./payment/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      inventory:
+        condition: service_started
+    restart: on-failure
+
+  payment-consumer:
+    build: ./payment
+    env_file: ./payment/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: python consumer.py
+    restart: on-failure
+
+  notification:
+    build: ./notification
+    env_file: ./notification/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: on-failure
