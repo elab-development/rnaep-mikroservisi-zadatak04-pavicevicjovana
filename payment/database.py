@@ -1,12 +1,21 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from redis_om import get_redis_connection
 
-load_dotenv()
+
+class Settings(BaseSettings):
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_password: str = ""
+    inventory_url: str = "http://localhost:8000"
+
+    model_config = SettingsConfigDict(env_file=".env")
+
+
+settings = Settings()
 
 redis = get_redis_connection(
-    host=os.getenv("REDIS_HOST"),
-    port=int(os.getenv("REDIS_PORT")),
-    password=os.getenv("REDIS_PASSWORD"),
+    host=settings.redis_host,
+    port=settings.redis_port,
+    password=settings.redis_password or None,
     decode_responses=True
 )
